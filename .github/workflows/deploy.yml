@@ -40,17 +40,14 @@ jobs:
         chmod 600 private-key.pem
         echo "Private key created and permissions set"
 
-    - name: Build the app directory (if needed)
+    - name: Create .ssh directory on EC2 (if it doesn't exist)
       run: |
-        # Example build command (if you need to build your app)
-        # Replace with your actual build steps
-        mkdir -p ./your-app-directory
-        echo "This is a test application" > ./your-app-directory/index.html
+        ssh -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ env.EC2_INSTANCE_IP }} "mkdir -p /home/ubuntu/.ssh"
 
-    - name: Copy files to EC2 instance
+    - name: Copy files to EC2 instance (to /home/ubuntu/.ssh)
       run: |
-        scp -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./your-app-directory ubuntu@${{ env.EC2_INSTANCE_IP }}:/path/to/deployment/directory
+        scp -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./your-app-directory ubuntu@${{ env.EC2_INSTANCE_IP }}:/home/ubuntu/.ssh
 
     - name: SSH into EC2 instance and restart the app
       run: |
-        ssh -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ env.EC2_INSTANCE_IP }} "cd /path/to/deployment/directory && docker-compose down && docker-compose up -d"
+        ssh -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ env.EC2_INSTANCE_IP }} "cd /home/ubuntu/.ssh && docker-compose down && docker-compose up -d"
