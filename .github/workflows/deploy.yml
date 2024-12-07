@@ -40,6 +40,13 @@ jobs:
         chmod 600 private-key.pem
         echo "Private key created and permissions set"
 
+    - name: Build the app directory (if needed)
+      run: |
+        # Example build command (if you need to build your app)
+        # Replace with your actual build steps
+        mkdir -p ./your-app-directory
+        echo "This is a test application" > ./your-app-directory/index.html
+
     - name: Copy files to EC2 instance
       run: |
         scp -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./your-app-directory ubuntu@${{ env.EC2_INSTANCE_IP }}:/path/to/deployment/directory
