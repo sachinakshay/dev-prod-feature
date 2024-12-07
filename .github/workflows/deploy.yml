@@ -15,29 +15,29 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # - name: Set up AWS CLI
-    #   uses: aws-actions/configure-aws-credentials@v1
-    #   with:
-    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     aws-region: us-east-1  # Specify your AWS region
+    - name: Set up AWS CLI
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1  # Specify your AWS region
 
-    # - name: Determine the EC2 Instance ID based on branch
-    #   id: ec2-instance-id
-    #   run: |
-    #     if [ "${GITHUB_REF##*/}" == "main" ]; then
-    #       echo "EC2_INSTANCE_ID=98.83.113.5" >> $GITHUB_ENV
-    #     elif [ "${GITHUB_REF##*/}" == "development" ]; then
-    #       echo "EC2_INSTANCE_ID=3.85.74.66" >> $GITHUB_ENV
-    #     elif [[ "${GITHUB_REF##*/}" == feature/* ]]; then
-    #       echo "EC2_INSTANCE_ID=54.146.33.138" >> $GITHUB_ENV
-    #     fi
-    #     echo "EC2 Instance ID: $EC2_INSTANCE_ID"
+    - name: Determine the EC2 Instance ID based on branch
+      id: ec2-instance-id
+      run: |
+        if [ "${GITHUB_REF##*/}" == "main" ]; then
+          echo "EC2_INSTANCE_ID=98.83.113.5" >> $GITHUB_ENV
+        elif [ "${GITHUB_REF##*/}" == "development" ]; then
+          echo "EC2_INSTANCE_ID=3.85.74.66" >> $GITHUB_ENV
+        elif [[ "${GITHUB_REF##*/}" == feature/* ]]; then
+          echo "EC2_INSTANCE_ID=54.146.33.138" >> $GITHUB_ENV
+        fi
+        echo "EC2 Instance ID: $EC2_INSTANCE_ID"
 
-    # - name: Copy files to EC2 instance
-    #   run: |
-    #     scp -i ${{ secrets.EC2_SSH_KEY }} -o StrictHostKeyChecking=no -r ./your-app-directory ubuntu@${{ env.EC2_INSTANCE_ID }}:/path/to/deployment/directory
+    - name: Copy files to EC2 instance
+      run: |
+        scp -i ${{ secrets.EC2_SSH_KEY }} -o StrictHostKeyChecking=no -r ./your-app-directory ubuntu@${{ env.EC2_INSTANCE_ID }}:/path/to/deployment/directory
 
-    # - name: SSH into EC2 instance and restart the app
-    #   run: |
-    #     ssh -i ${{ secrets.EC2_SSH_KEY }} -o StrictHostKeyChecking=no ubuntu@${{ env.EC2_INSTANCE_ID }} "cd /path/to/deployment/directory && docker-compose down && docker-compose up -d"
+    - name: SSH into EC2 instance and restart the app
+      run: |
+        ssh -i ${{ secrets.EC2_SSH_KEY }} -o StrictHostKeyChecking=no ubuntu@${{ env.EC2_INSTANCE_ID }} "cd /path/to/deployment/directory && docker-compose down && docker-compose up -d"
