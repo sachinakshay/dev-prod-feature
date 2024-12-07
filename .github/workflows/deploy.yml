@@ -27,9 +27,13 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
+    - name: Create target directory on EC2 (if not exists)
+      run: |
+        ssh -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@98.83.113.5 "mkdir -p /home/ubuntu/app"
+
     - name: Copy files to EC2 instance (to /home/ubuntu/app)
       run: |
-        scp -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./your-app-directory ubuntu@98.83.113.5:/home/ubuntu/app
+        scp -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./your-app-directory/* ubuntu@98.83.113.5:/home/ubuntu/app
 
     - name: SSH into EC2 instance and restart the app
       run: |
