@@ -23,14 +23,14 @@ jobs:
         aws-region: us-east-1  # Specify your AWS region
 
     - name: Determine the EC2 Instance ID based on branch
-      id: ec2-instance-id
+      id: 3.85.74.66, 98.83.113.5, 54.146.33.138
       run: |
         if [ "${GITHUB_REF##*/}" == "main" ]; then
-          echo "EC2_INSTANCE_ID=prod-instance-id" >> $GITHUB_ENV
+          echo "EC2_INSTANCE_ID=98.83.113.5" >> $GITHUB_ENV
         elif [ "${GITHUB_REF##*/}" == "development" ]; then
-          echo "EC2_INSTANCE_ID=dev-instance-id" >> $GITHUB_ENV
+          echo "EC2_INSTANCE_ID=3.85.74.66" >> $GITHUB_ENV
         elif [[ "${GITHUB_REF##*/}" == feature/* ]]; then
-          echo "EC2_INSTANCE_ID=feature-instance-id" >> $GITHUB_ENV
+          echo "EC2_INSTANCE_ID=54.146.33.138" >> $GITHUB_ENV
         fi
         echo "EC2 Instance ID: $EC2_INSTANCE_ID"
 
