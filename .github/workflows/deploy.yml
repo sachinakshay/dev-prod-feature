@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - development
-      - 'feature/*'  # For feature branches
+      - 'feature/*'
 
 jobs:
   deploy:
@@ -15,39 +15,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: List files in the repository
+      run: |
+        ls -R
+
     - name: Set up AWS CLI
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1  # Specify your AWS region
+        aws-region: us-east-1
 
-    - name: Determine the EC2 Instance IP based on branch
-      id: ec2-instance-id
+    - name: Copy files to EC2 instance (to /home/ubuntu/app)
       run: |
-        if [ "${GITHUB_REF##*/}" == "main" ]; then
-          echo "EC2_INSTANCE_IP=98.83.113.5" >> $GITHUB_ENV
-        elif [ "${GITHUB_REF##*/}" == "development" ]; then
-          echo "EC2_INSTANCE_IP=3.85.74.66" >> $GITHUB_ENV
-        elif [[ "${GITHUB_REF##*/}" == feature/* ]]; then
-          echo "EC2_INSTANCE_IP=54.146.33.138" >> $GITHUB_ENV
-        fi
-        echo "EC2 Instance IP: $EC2_INSTANCE_IP"
-
-    - name: Create SSH key file from secret
-      run: |
-        echo "${{ secrets.EC2_SSH_KEY }}" > private-key.pem
-        chmod 600 private-key.pem
-        echo "Private key created and permissions set"
-
-    - name: Create .ssh directory on EC2 (if it doesn't exist)
-      run: |
-        ssh -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ env.EC2_INSTANCE_IP }} "mkdir -p /home/ubuntu/.ssh"
-
-    - name: Copy files to EC2 instance (to /home/ubuntu/.ssh)
-      run: |
-        scp -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./your-app-directory ubuntu@${{ env.EC2_INSTANCE_IP }}:/home/ubuntu/.ssh
+        scp -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./your-app-directory ubuntu@98.83.113.5:/home/ubuntu/app
 
     - name: SSH into EC2 instance and restart the app
       run: |
-        ssh -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ env.EC2_INSTANCE_IP }} "cd /home/ubuntu/.ssh && docker-compose down && docker-compose up -d"
+        ssh -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@98.83.113.5 "cd /home/ubuntu/app && docker-compose down && docker-compose up -d"
