@@ -3,9 +3,9 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main
-      - development
-      - 'feature/*'
+      - main        # For prod
+      - dev         # For dev
+      - stage       # For stage
 
 jobs:
   deploy:
@@ -27,15 +27,36 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
+    - name: Define EC2 instance based on branch
+      run: |
+        if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+          export EC2_INSTANCE="prod-ec2-ip-address"   # Replace with your prod EC2 IP
+          export APP_ENV="prod"
+        elif [[ "${GITHUB_REF}" == "refs/heads/dev" ]]; then
+          export EC2_INSTANCE="dev-ec2-ip-address"    # Replace with your dev EC2 IP
+          export APP_ENV="dev"
+        elif [[ "${GITHUB_REF}" == "refs/heads/stage" ]]; then
+          export EC2_INSTANCE="stage-ec2-ip-address"  # Replace with your stage EC2 IP
+          export APP_ENV="stage"
+        fi
+
     - name: Create target directory on EC2 (if not exists)
       run: |
         set -e  # Fail the job if any command fails
-        ssh -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=60 ubuntu@54.172.254.181 "mkdir -p /home/ubuntu/app"
+        ssh -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=60 ubuntu@$EC2_INSTANCE "mkdir -p /home/ubuntu/app"
 
-    - name: Copy files to EC2 instance (to /home/ubuntu/app)
+    - name: Copy files to EC2 instance
       run: |
         set -e  # Fail the job if any command fails
-        scp -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./your-app-directory/* ubuntu@54.172.254.181:/home/ubuntu/app
+        scp -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./your-app-directory/* ubuntu@$EC2_INSTANCE:/home/ubuntu/app
 
     - name: SSH into EC2 instance and restart the app
-     
+      run: |
+        set -e  # Fail the job if any command fails
+        ssh -i private-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30 ubuntu@$EC2_INSTANCE << 'EOF'
+          echo "Stopping the Docker container on $APP_ENV environment..."
+          cd /home/ubuntu/app
+          docker-compose down
+          echo "Starting the Docker container on $APP_ENV environment..."
+          docker-compose up -d
+        EOF
